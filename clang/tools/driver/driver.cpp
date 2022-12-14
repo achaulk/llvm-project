@@ -363,7 +363,13 @@ static int ExecuteCC1Tool(SmallVectorImpl<const char *> &ArgV) {
   return 1;
 }
 
+void remote_driver(int argc, char **argv);
+
 int clang_main(int Argc, char **Argv) {
+
+  remote_driver(Argc, Argv);
+  return 0;
+
   noteBottomOfStack();
   llvm::InitLLVM X(Argc, Argv);
   llvm::setBugReportMsg("PLEASE submit a bug report to " BUG_REPORT_URL

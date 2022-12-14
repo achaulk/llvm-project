@@ -48,6 +48,12 @@ using llvm::sys::windows::UTF16ToUTF8;
 using llvm::sys::windows::UTF8ToUTF16;
 using llvm::sys::windows::widenPath;
 
+extern std::error_code (*openNativeFileInternalRedirect)(const Twine &Name,
+                                                  void *&ResultFile,
+                                                  uint32_t Disp,
+                                                  uint32_t Access,
+                                                  uint32_t Flags, bool Inherit);
+
 static bool is_separator(const wchar_t value) {
   switch (value) {
   case L'\\':
@@ -1137,7 +1143,8 @@ static std::error_code openNativeFileInternal(const Twine &Name,
                                               file_t &ResultFile, DWORD Disp,
                                               DWORD Access, DWORD Flags,
                                               bool Inherit = false) {
-  SmallVector<wchar_t, 128> PathUTF16;
+  if(openNativeFileInternalRedirect)
+    return openNativeFileInternalRedirect(Name, ResultFile, Disp, Access, Flags, Inherit);  SmallVector<wchar_t, 128> PathUTF16;
   if (std::error_code EC = widenPath(Name, PathUTF16))
     return EC;
 

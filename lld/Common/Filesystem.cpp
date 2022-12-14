@@ -121,6 +121,7 @@ void lld::unlinkAsync(StringRef path) {
 // is called. We use that class without calling commit() to predict
 // if the given file is writable.
 std::error_code lld::tryCreateFile(StringRef path) {
+  return std::error_code();
   if (path.empty())
     return std::error_code();
   if (path == "-")

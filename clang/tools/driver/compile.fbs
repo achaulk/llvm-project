@@ -1,0 +1,116 @@
+namespace compiler;
+
+enum FileError : ushort {
+	None,
+	AccessViolation,
+	NotExist,
+}
+
+enum CompileMode : ushort {
+	CompileToObj,
+	CompileAndLink,
+	Preprocess,
+	CompileToAssembly,
+}
+
+table FileContents
+{
+	canonical_filename: string (required);
+	raw_contents: string;
+	handle: uint;
+	handle_offset: ulong;
+	size: ulong;
+	uuid: ulong;
+}
+
+table OpenRequest
+{
+	compile: uint;
+	path: string;
+	write: bool;
+	create: bool;
+}
+
+table OpenResponse
+{
+	compile: uint;
+	file: FileContents;
+	access_error: FileError;
+}
+
+table StatRequest
+{
+	compile: uint;
+	path: string;
+}
+
+table StatResponse
+{
+	exists: bool;
+	is_dir: bool;
+	write: bool;
+	size: ulong;
+	uuid: ulong;
+	err: FileError;
+}
+
+table CompileSourceFile
+{
+	canonical_path: string;
+	obj_path: string;
+	compile: bool;
+	link: bool;
+}
+
+table CompileRequest
+{
+	compile_options: [string];
+	link_options: [string];
+	late_link_options: [string];
+	sources: [CompileSourceFile];
+	mode: CompileMode;
+	id: uint;
+	cwd: string;
+	output_binary: string;
+	system_includes: [string];
+	user_includes: [string];
+}
+
+table CompileStatus
+{
+	id: uint;
+	status: bool;
+	errored_state: string;
+	output: string;
+}
+
+table Exit {}
+
+table CompilerInfo
+{
+	version: uint;
+	default_target: string;
+	host_cpu: string;
+	package: string;
+	targets: [string];
+}
+
+union CompilerToHost
+{
+	CompilerInfo, CompileStatus, OpenRequest, StatRequest
+}
+
+union HostToCompiler
+{
+	CompileRequest, OpenResponse, StatResponse, Exit
+}
+
+table CompilerMessage
+{
+	msg: CompilerToHost;
+}
+
+table HostMessage
+{
+	msg: HostToCompiler;
+}

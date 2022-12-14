@@ -27,6 +27,10 @@ add_clang_tool(clang
   cc1_main.cpp
   cc1as_main.cpp
   cc1gen_reproducer_main.cpp
+  remote_driver.cpp
+  remote_vfs.cpp
+  remote_driver_test.cpp
+  win32.cpp
 
   DEPENDS
   intrinsics_gen
@@ -42,6 +46,9 @@ clang_target_link_libraries(clang
   clangFrontend
   clangFrontendTool
   clangSerialization
+  lldCommon
+  lldCOFF
+  lldELF
   )
 
 if(WIN32 AND NOT CYGWIN)

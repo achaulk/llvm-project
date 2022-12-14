@@ -2816,7 +2816,7 @@ template <class ELFT> void Writer<ELFT>::openFile() {
   unsigned flags = 0;
   if (!config->relocatable)
     flags |= FileOutputBuffer::F_executable;
-  if (!config->mmapOutputFile)
+//  if (!config->mmapOutputFile)
     flags |= FileOutputBuffer::F_no_mmap;
   Expected<std::unique_ptr<FileOutputBuffer>> bufferOrErr =
       FileOutputBuffer::create(config->outputFile, fileSize, flags);

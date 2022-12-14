@@ -32,6 +32,12 @@
 using namespace llvm;
 using namespace llvm::support::endian;
 
+std::error_code (*openNativeFileInternalRedirect)(const Twine &Name,
+                                                  void *&ResultFile,
+                                                  uint32_t Disp,
+                                                  uint32_t Access,
+                                                  uint32_t Flags, bool Inherit);
+
 namespace {
   using llvm::StringRef;
   using llvm::sys::path::is_separator;
@@ -222,6 +228,11 @@ createUniqueEntity(const Twine &Model, int &ResultFD,
 namespace llvm {
 namespace sys  {
 namespace path {
+
+void SetNativeOverrides(void *nativeFileRedirect) {
+  openNativeFileInternalRedirect =
+      (decltype(openNativeFileInternalRedirect))nativeFileRedirect;
+}
 
 const_iterator begin(StringRef path, Style style) {
   const_iterator i;
