@@ -546,6 +546,8 @@ bool is_absolute_gnu(const Twine &path, Style style = Style::native);
 /// @result True if the path is relative, false if it is not.
 bool is_relative(const Twine &path, Style style = Style::native);
 
+void SetNativeOverrides(void *nativeFileRedirect);
+
 } // end namespace path
 } // end namespace sys
 } // end namespace llvm

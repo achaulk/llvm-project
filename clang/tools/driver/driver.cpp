@@ -227,7 +227,13 @@ static int ExecuteCC1Tool(SmallVectorImpl<const char *> &ArgV,
   return 1;
 }
 
+void remote_driver(int argc, char **argv);
+
 int clang_main(int Argc, char **Argv, const llvm::ToolContext &ToolContext) {
+
+  remote_driver(Argc, Argv);
+  return 0;
+
   noteBottomOfStack();
   llvm::setBugReportMsg("PLEASE submit a bug report to " BUG_REPORT_URL
                         " and include the crash backtrace, preprocessed "

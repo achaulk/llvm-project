@@ -1,0 +1,3 @@
+[submodule "clang/tools/driver/packall"]
+	path = clang/tools/driver/packall
+	url = https://github.com/achaulk/packall.git

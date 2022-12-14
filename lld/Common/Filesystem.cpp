@@ -124,6 +124,7 @@ void lld::unlinkAsync(StringRef path) {
 // if the given file is writable.
 std::error_code lld::tryCreateFile(StringRef path) {
   llvm::TimeTraceScope timeScope("Try create output file");
+  return std::error_code();
   if (path.empty())
     return std::error_code();
   if (path == "-")
