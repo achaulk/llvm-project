@@ -46,7 +46,8 @@ import abc
 import collections
 from collections.abc import Callable, Sequence
 import io
-from typing import Any, ClassVar, TypeVar, overload
+from pathlib import Path
+from typing import Any, BinaryIO, ClassVar, TypeVar, overload
 
 __all__ = [
     "AffineAddExpr",
@@ -117,6 +118,7 @@ __all__ = [
     "Float8E4M3Type",
     "Float8E5M2FNUZType",
     "Float8E5M2Type",
+    "Float8E8M0FNUType",
     "FloatAttr",
     "FloatTF32Type",
     "FloatType",
@@ -283,12 +285,12 @@ class _OperationBase:
         """
         Verify the operation. Raises MLIRError if verification fails, and returns true otherwise.
         """
-    def write_bytecode(self, file: Any, desired_version: int | None = None) -> None:
+    def write_bytecode(self, file: BinaryIO | str, desired_version: int | None = None) -> None:
         """
         Write the bytecode form of the operation to a file like object.
 
         Args:
-          file: The file like object to write to.
+          file: The file like object or path to write to.
           desired_version: The version of bytecode to emit.
         Returns:
           The bytecode writer status.
@@ -1660,6 +1662,19 @@ class Float8E5M2Type(FloatType):
     @property
     def typeid(self) -> TypeID: ...
 
+class Float8E8M0FNUType(FloatType):
+    static_typeid: ClassVar[TypeID]
+    @staticmethod
+    def get(context: Context | None = None) -> Float8E8M0FNUType:
+        """
+        Create a float8_e8m0fnu type.
+        """
+    @staticmethod
+    def isinstance(other: Type) -> bool: ...
+    def __init__(self, cast_from_type: Type) -> None: ...
+    @property
+    def typeid(self) -> TypeID: ...
+
 class FloatAttr(Attribute):
     static_typeid: ClassVar[TypeID]
     @staticmethod
@@ -2112,6 +2127,15 @@ class Module:
     def parse(asm: str | bytes, context: Context | None = None) -> Module:
         """
         Parses a module's assembly format from a string.
+
+        Returns a new MlirModule or raises an MLIRError if the parsing fails.
+
+        See also: https://mlir.llvm.org/docs/LangRef/
+        """
+    @staticmethod
+    def parseFile(path: str, context: Context | None = None) -> Module:
+        """
+        Parses a module's assembly format from file.
 
         Returns a new MlirModule or raises an MLIRError if the parsing fails.
 

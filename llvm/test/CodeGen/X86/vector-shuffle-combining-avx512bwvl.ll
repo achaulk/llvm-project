@@ -19,8 +19,7 @@ define <16 x i16> @combine_vpermt2var_16i16_identity_mask(<16 x i16> %x0, <16 x 
 ; X86-NEXT:    vpmovsxbw {{.*#+}} ymm1 = [15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0]
 ; X86-NEXT:    kmovw {{[0-9]+}}(%esp), %k1
 ; X86-NEXT:    vpermt2w %ymm0, %ymm1, %ymm0 {%k1} {z}
-; X86-NEXT:    vpmovsxbw {{.*#+}} ymm1 = [15,30,13,28,11,26,9,24,7,22,5,20,3,18,1,16]
-; X86-NEXT:    vpermt2w %ymm0, %ymm1, %ymm0 {%k1} {z}
+; X86-NEXT:    vpermw %ymm0, %ymm1, %ymm0 {%k1} {z}
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: combine_vpermt2var_16i16_identity_mask:
@@ -28,8 +27,7 @@ define <16 x i16> @combine_vpermt2var_16i16_identity_mask(<16 x i16> %x0, <16 x 
 ; X64-NEXT:    vpmovsxbw {{.*#+}} ymm1 = [15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0]
 ; X64-NEXT:    kmovd %edi, %k1
 ; X64-NEXT:    vpermt2w %ymm0, %ymm1, %ymm0 {%k1} {z}
-; X64-NEXT:    vpmovsxbw {{.*#+}} ymm1 = [15,30,13,28,11,26,9,24,7,22,5,20,3,18,1,16]
-; X64-NEXT:    vpermt2w %ymm0, %ymm1, %ymm0 {%k1} {z}
+; X64-NEXT:    vpermw %ymm0, %ymm1, %ymm0 {%k1} {z}
 ; X64-NEXT:    retq
   %res0 = call <16 x i16> @llvm.x86.avx512.maskz.vpermt2var.hi.256(<16 x i16> <i16 15, i16 14, i16 13, i16 12, i16 11, i16 10, i16 9, i16 8, i16 7, i16 6, i16 5, i16 4, i16 3, i16 2, i16 1, i16 0>, <16 x i16> %x0, <16 x i16> %x1, i16 %m)
   %res1 = call <16 x i16> @llvm.x86.avx512.maskz.vpermt2var.hi.256(<16 x i16> <i16 15, i16 30, i16 13, i16 28, i16 11, i16 26, i16 9, i16 24, i16 7, i16 22, i16 5, i16 20, i16 3, i16 18, i16 1, i16 16>, <16 x i16> %res0, <16 x i16> %res0, i16 %m)
@@ -99,6 +97,36 @@ define <16 x i8> @combine_shuffle_vrotli_v4i32(<4 x i32> %a0) {
   ret <16 x i8> %3
 }
 declare <4 x i32> @llvm.fshl.v4i32(<4 x i32>, <4 x i32>, <4 x i32>)
+
+
+define <8 x i32> @concat_vrotli_v4i32(<4 x i32> %a0, <4 x i32> %a1) {
+; CHECK-LABEL: concat_vrotli_v4i32:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    # kill: def $xmm0 killed $xmm0 def $ymm0
+; CHECK-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
+; CHECK-NEXT:    vprold $3, %ymm0, %ymm0
+; CHECK-NEXT:    ret{{[l|q]}}
+  %r0 = tail call <4 x i32> @llvm.fshl.v4i32(<4 x i32> %a0, <4 x i32> %a0, <4 x i32> splat (i32 3))
+  %r1 = tail call <4 x i32> @llvm.fshl.v4i32(<4 x i32> %a1, <4 x i32> %a1, <4 x i32> splat (i32 3))
+  %shuffle = shufflevector <4 x i32> %r0, <4 x i32> %r1, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+  ret <8 x i32> %shuffle
+}
+
+define <8 x i32> @concat_vrotlv_v4i32(<4 x i32> %a0, <4 x i32> %a1, <8 x i32> %a2) {
+; CHECK-LABEL: concat_vrotlv_v4i32:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    vextracti128 $1, %ymm2, %xmm3
+; CHECK-NEXT:    vprolvd %xmm2, %xmm0, %xmm0
+; CHECK-NEXT:    vprolvd %xmm3, %xmm1, %xmm1
+; CHECK-NEXT:    vinserti128 $1, %xmm1, %ymm0, %ymm0
+; CHECK-NEXT:    ret{{[l|q]}}
+  %lo = shufflevector <8 x i32> %a2, <8 x i32> poison, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+  %hi = shufflevector <8 x i32> %a2, <8 x i32> poison, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %r0 = tail call <4 x i32> @llvm.fshl.v4i32(<4 x i32> %a0, <4 x i32> %a0, <4 x i32> %lo)
+  %r1 = tail call <4 x i32> @llvm.fshl.v4i32(<4 x i32> %a1, <4 x i32> %a1, <4 x i32> %hi)
+  %shuffle = shufflevector <4 x i32> %r0, <4 x i32> %r1, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+  ret <8 x i32> %shuffle
+}
 
 define void @PR46178(ptr %0) {
 ; X86-LABEL: PR46178:
@@ -176,11 +204,11 @@ define i64 @PR55050() {
 ; X86-NEXT:    xorl %edx, %edx
 ; X86-NEXT:    xorl %eax, %eax
 ; X86-NEXT:    testb %dl, %dl
-; X86-NEXT:    jne .LBB10_2
+; X86-NEXT:    jne .LBB12_2
 ; X86-NEXT:  # %bb.1: # %if
 ; X86-NEXT:    xorl %eax, %eax
 ; X86-NEXT:    xorl %edx, %edx
-; X86-NEXT:  .LBB10_2: # %exit
+; X86-NEXT:  .LBB12_2: # %exit
 ; X86-NEXT:    retl
 ;
 ; X64-LABEL: PR55050:
@@ -192,7 +220,7 @@ define i64 @PR55050() {
 entry:
   %i275 = call <2 x i64> @llvm.x86.sse2.psad.bw(<16 x i8> undef, <16 x i8> zeroinitializer)
   %i277 = call <2 x i64> @llvm.x86.sse2.psad.bw(<16 x i8> undef, <16 x i8> zeroinitializer)
-  br i1 undef, label %exit, label %if
+  br i1 poison, label %exit, label %if
 
 if:
   %i298 = bitcast <2 x i64> %i275 to <4 x i32>
